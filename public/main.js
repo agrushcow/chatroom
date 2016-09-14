@@ -5,6 +5,7 @@ $(document).ready(function() {
     var typing = $('#typing');
     var connections = $('#connections span');
     var clickCount = 0;
+    var timeout;
 
     var addMessage = function(message) {
         messages.append('<div>' + message + '</div>');
@@ -14,16 +15,20 @@ $(document).ready(function() {
     var updateConnections = function(connectionCount) {
       connections.html(connectionCount);
       console.log(connectionCount);
-      //still only updates on refresh, have questions about actions onload/close
     };
 
     var addUsername = function(username) {
-      messages.append(username);
+      messages.append('<div>' + username + '</div>');
     };
 
     var userType = function(msg) {
       typing.html('<div>' + msg + '</div>');
-      //add timeout
+      if (!timeout) {
+        timeout = setTimeout(function() {
+          typing.html('');
+          timeout = undefined;
+        }, 3000);
+      }
     }
 
 /*------------------  jQuery  ---------------------*/
@@ -33,6 +38,7 @@ $(document).ready(function() {
           //user is not signed in yet
           socket.emit('username', input.val());
           socket.username = input.val();
+          input.removeAttr('placeholder');
         } else {
           //user is signed in
           socket.emit('message', input.val());
@@ -43,30 +49,10 @@ $(document).ready(function() {
       } else {
         if (socket.username) {
             socket.emit('typing');
+            //userType(socket.username + " is typing...");
         }
       }
     });
-
-        // if(clickCount == 0) {
-        //   if(event.keycode = 13) {
-        //     addUsername(username);
-        //     clickCount++;
-        //   }
-        // } else {
-        //   if (event.keyCode != 13) {
-        //       return;
-        //   }
-        //   var message = input.val();
-        //
-        //   if (socket.username) {
-        //     addMessage(socket.username + ": " + message);
-        //     socket.emit('message', message);
-        //   } else {
-        //     socket.emit('username', message);
-        //     socket.username = message;
-        //   }
-        //   input.val('');
-        // }
 
 socket.on('message', addMessage);
 socket.on('typing', userType);
